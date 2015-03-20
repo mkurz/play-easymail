@@ -2,13 +2,13 @@ import play.PlayJava
 
 name := "play-easymail-usage"
 
-scalaVersion := "2.11.2"
+scalaVersion := "2.11.5"
 
 version := "1.0-SNAPSHOT"
 
 libraryDependencies ++= Seq(
   // Comment the next line for local development:
-  "com.feth" %% "play-easymail" % "0.6.8-SNAPSHOT",
+  "com.feth" %% "play-easymail" % "0.7.0-SNAPSHOT",
   javaCore
 )
 
