@@ -1,11 +1,14 @@
 package com.feth.play.module.mail;
 
 import akka.actor.Cancellable;
+
 import com.feth.play.module.mail.Mailer.Mail.Body;
-import play.libs.mailer.Email;
-import play.libs.mailer.MailerPlugin;
+import com.google.inject.Inject;
+
 import play.Configuration;
+import play.api.libs.mailer.MailerClient;
 import play.libs.Akka;
+import play.libs.mailer.Email;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -28,6 +31,8 @@ public class Mailer {
         public static final String DELAY = "delay";
         private static final String VERSION = "version";
     }
+
+    @Inject private MailerClient mailer;
 
     private final FiniteDuration delay;
 
@@ -383,50 +388,48 @@ public class Mailer {
         @Override
         public void run() {
             final Email email = new Email();
-
             email.setSubject(mail.getSubject());
             email.setTo(Arrays.asList(mail.getRecipients()));
             if (mail.getCc() != null) {
-                email.setCc(Arrays.asList(mail.getCc()));
+            	email.setCc(Arrays.asList(mail.getCc()));
             }
             if (mail.getBcc() != null) {
-                email.setBcc(Arrays.asList(mail.getBcc()));
+            	email.setBcc(Arrays.asList(mail.getBcc()));
             }
             email.setFrom(mail.getFrom());
             if (includeXMailerHeader) {
-                email.addHeader("X-Mailer", MAILER + getVersion());
+            	email.addHeader("X-Mailer", MAILER + getVersion());
             }
 
             for (final Entry<String, List<String>> entry : mail
                     .getCustomHeaders().entrySet()) {
                 final String headerName = entry.getKey();
                 for (final String headerValue : entry.getValue()) {
-                    email.addHeader(headerName, headerValue);
+                	email.addHeader(headerName, headerValue);
                 }
             }
             if (mail.getReplyTo() != null) {
-                email.setReplyTo(mail.getReplyTo());
+            	email.setReplyTo(mail.getReplyTo());
             }
             for (final Mail.Attachment attachment : mail.getAttachments()) {
                 if (attachment.getData() != null) {
-                    email.addAttachment(attachment.getName(), attachment.getData(), attachment.getMimeType(), attachment.getDescription(), attachment.getDisposition());
+                	email.addAttachment(attachment.getName(), attachment.getData(), attachment.getMimeType(), attachment.getDescription(), attachment.getDisposition());
                 } else {
-                    email.addAttachment(attachment.getName(), attachment.getFile(), attachment.getDescription(), attachment.getDisposition());
+                	email.addAttachment(attachment.getName(), attachment.getFile(), attachment.getDescription(), attachment.getDisposition());
                 }
             }
             if (mail.getBody().isBoth()) {
-                // sends both text and html
-                email.setBodyText(mail.getBody().getText());
-                email.setBodyHtml(mail.getBody().getHtml());
+            	email.setBodyText(mail.getBody().getText());
+            	email.setBodyHtml(mail.getBody().getHtml());
             } else if (mail.getBody().isText()) {
                 // sends text/text
             	email.setBodyText(mail.getBody().getText());
             } else {
                 // if(mail.isHtml())
                 // sends html
-                email.setBodyHtml(mail.getBody().getHtml());
+            	email.setBodyHtml(mail.getBody().getHtml());
             }
-            MailerPlugin.send(email);
+            mailer.send(email);
         }
 
     }
